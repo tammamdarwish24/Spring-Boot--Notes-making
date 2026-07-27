@@ -9,6 +9,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
@@ -43,13 +45,13 @@ public class SecurityConfig {
 		return http.build();
 	}
 	@Bean
-	public CommandLineRunner initData(RoleRepository roleRepo,UserRepository userRepo) {
+	public CommandLineRunner initData(RoleRepository roleRepo,UserRepository userRepo, PasswordEncoder passwordEncoder) {
 		return args->{ Role user_role=roleRepo.findByRoleName(AppRole.ROLE_USER).orElseGet(()-> roleRepo.save(new Role(AppRole.ROLE_USER)));
 	                   Role admin_role=roleRepo.findByRoleName(AppRole.ROLE_ADMIN).orElseGet(()-> roleRepo.save(new Role(AppRole.ROLE_ADMIN)));
 	           
 	                   if (!userRepo.existsByUserName("user1"))
 	                   {
-	                	   User user1= new User("user1","user1@gmail.com","{noop}user123");
+	                	   User user1= new User("user1","user1@gmail.com",passwordEncoder.encode("user123"));
 	                	   user1.setAccountNonLocked(true);
 	                	   user1.setAccountNonExpired(true);
 	                	   user1.setCredentilasNonExpired(true);
@@ -64,7 +66,7 @@ public class SecurityConfig {
 	          
 		
 	                   if (!userRepo.existsByUserName("admin")) {
-	                       User admin = new User("admin", "admin@example.com", "{noop}adminPass");
+	                       User admin = new User("admin", "admin@example.com", passwordEncoder.encode("adminPass"));
 	                       admin.setAccountNonLocked(true);
 	                       admin.setAccountNonExpired(true);
 	                       admin.setCredentilasNonExpired(true);
@@ -83,6 +85,12 @@ public class SecurityConfig {
 	
 };
 }
+	@Bean
+public PasswordEncoder passwordEncoder()
+{
+	return new BCryptPasswordEncoder();
+}
+	
 }
 
 /*   @Bean
